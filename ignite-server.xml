@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Standalone Apache Ignite Configuration
+    Purpose: This file defines the behavior of a standalone Ignite Server Node.
+    In a production system, you would start Ignite using this file.
+-->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <bean id="ignite.cfg" class="org.apache.ignite.configuration.IgniteConfiguration">
+        
+        <property name="igniteInstanceName" value="StandaloneIgniteServer"/>
+
+        <!-- 1. Network Configuration -->
+        <property name="discoverySpi">
+            <bean class="org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi">
+                <property name="ipFinder">
+                    <bean class="org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder">
+                        <property name="addresses">
+                            <list>
+                                <!-- Localhost for demo; In production, use real IP addresses -->
+                                <value>127.0.0.1:47500..47509</value>
+                            </list>
+                        </property>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+
+        <!-- 2. Data Storage (RAM + Persistence) -->
+        <property name="dataStorageConfiguration">
+            <bean class="org.apache.ignite.configuration.DataStorageConfiguration">
+                <property name="defaultDataRegionConfiguration">
+                    <bean class="org.apache.ignite.configuration.DataRegionConfiguration">
+                        <property name="name" value="Default_Region"/>
+                        <!-- 100MB initial, 500MB max -->
+                        <property name="initialSize" value="#{100 * 1024 * 1024}"/>
+                        <property name="maxSize" value="#{500 * 1024 * 1024}"/>
+                        <!-- Enable Persistence: Writes data to Disk -->
+                        <property name="persistenceEnabled" value="true"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+
+        <!-- 3. Cache Configuration with SQL Support -->
+        <property name="cacheConfiguration">
+            <list>
+                <bean class="org.apache.ignite.configuration.CacheConfiguration">
+                    <property name="name" value="productCache"/>
+                    <property name="cacheMode" value="PARTITIONED"/>
+                    <property name="backups" value="1"/>
+                    
+                    <property name="statisticsEnabled" value="true"/>
+                    
+                    <!-- SQL Support: Allows querying via JDBC/SQL -->
+                    <property name="indexedTypes">
+                        <list>
+                            <value>java.lang.Long</value>
+                            <value>com.ignite.mastery.model.Product</value>
+                        </list>
+                    </property>
+                </bean>
+            </list>
+        </property>
+    </bean>
+</beans>

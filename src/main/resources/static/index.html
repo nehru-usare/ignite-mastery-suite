@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ignite Mastery - Cache Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --primary: #38bdf8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --text: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), #a855f7);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            font-size: 0.875rem;
+            font-weight: 600;
+            border: 1px solid var(--success);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        .card::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--primary);
+            opacity: 0.3;
+        }
+
+        .card.success::after {
+            background: var(--success);
+            opacity: 0.5;
+        }
+
+        .card.warning::after {
+            background: var(--warning);
+            opacity: 0.5;
+        }
+
+        .label {
+            color: var(--text-dim);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .unit {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-left: 0.25rem;
+        }
+
+        .footer {
+            margin-top: 4rem;
+            color: var(--text-dim);
+            font-size: 0.875rem;
+            text-align: center;
+        }
+
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        .refresh-hint {
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>Ignite Mastery</h1>
+        <div id="countdown"
+            style="margin-bottom: 0.5rem; font-family: 'JetBrains Mono'; font-size: 0.9rem; color: var(--text-dim);">
+            Dashboard refreshing in 5 seconds...</div>
+
+        <div style="margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+            <label for="refreshInterval" style="font-size: 0.8rem; color: var(--text-dim);">Refresh every:</label>
+            <input type="number" id="refreshInterval" value="5" min="1" max="60"
+                style="background: var(--card-bg); border: 1px solid rgba(255,255,255,0.1); color: var(--text); padding: 0.2rem 0.5rem; border-radius: 4px; width: 60px; font-family: 'JetBrains Mono';">
+            <span style="font-size: 0.8rem; color: var(--text-dim);">seconds</span>
+        </div>
+
+        <div class="status-badge"><span class="pulse">●</span> Standalone Cluster Connected</div>
+    </header>
+
+    <div class="grid">
+        <div class="card success">
+            <div class="label">Cache Hits</div>
+            <div class="value" id="hits">0</div>
+        </div>
+        <div class="card warning">
+            <div class="label">Cache Misses</div>
+            <div class="value" id="misses">0</div>
+        </div>
+        <div class="card">
+            <div class="label">Hit Percentage</div>
+            <div class="value" id="hitPercentage">0<span class="unit">%</span></div>
+        </div>
+        <div class="card">
+            <div class="label">Total Cache Entries</div>
+            <div class="value" id="size">0</div>
+        </div>
+        <div class="card">
+            <div class="label">Total Reads (Gets)</div>
+            <div class="value" id="gets">0</div>
+        </div>
+        <div class="card">
+            <div class="label">Avg Access Time</div>
+            <div class="value" id="avgGetTime">0<span class="unit">ms</span></div>
+        </div>
+    </div>
+
+    <div class="refresh-hint" id="refreshHint">Updating every 5 seconds...</div>
+
+    <div class="footer">
+        &copy; 2026 Apache Ignite Mastery Project • Standalone Architecture Mode
+    </div>
+
+    <script>
+        let refreshInterval = 5;
+        let timeLeft = refreshInterval;
+        const countdownElement = document.getElementById('countdown');
+        const intervalInput = document.getElementById('refreshInterval');
+        const refreshHint = document.getElementById('refreshHint');
+
+        intervalInput.addEventListener('change', () => {
+            let val = parseInt(intervalInput.value);
+            if (val < 1) val = 1;
+            if (val > 60) val = 60;
+            refreshInterval = val;
+            intervalInput.value = val;
+            timeLeft = refreshInterval; // Reset immediately on change
+            refreshHint.textContent = `Updating every ${refreshInterval} seconds...`;
+            updateCountdown();
+        });
+
+        async function fetchMetrics() {
+            try {
+                const response = await fetch('/api/products/metrics');
+                const data = await response.json();
+
+                document.getElementById('hits').textContent = data.hits;
+                document.getElementById('misses').textContent = data.misses;
+                document.getElementById('hitPercentage').textContent = (data.hitPercentage * 100).toFixed(1);
+                document.getElementById('size').textContent = data.size;
+                document.getElementById('gets').textContent = data.gets;
+                document.getElementById('avgGetTime').textContent = data.avgGetTime.toFixed(2);
+
+                timeLeft = refreshInterval; // Reset countdown after fetch
+            } catch (error) {
+                console.error('Failed to fetch metrics:', error);
+            }
+        }
+
+        function updateCountdown() {
+            if (timeLeft <= 0) {
+                fetchMetrics();
+            } else {
+                countdownElement.textContent = `Dashboard refreshing in ${timeLeft} seconds...`;
+                timeLeft--;
+            }
+        }
+
+        // Start countdown and fetching
+        setInterval(updateCountdown, 1000);
+        fetchMetrics();
+    </script>
+</body>
+
+</html>
